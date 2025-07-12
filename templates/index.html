@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHub - Connect, Learn, Grow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="SkillHub Logo">
+                    <h1>SkillHub</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link active">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('requests') }}" class="nav-link">Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <div class="hero-container">
+                {% if session.get('platform_message') %}
+                    <div class="platform-message alert alert-{{ session.platform_message.type }}">
+                        <div class="message-content">
+                            <p>{{ session.platform_message.text }}</p>
+                        </div>
+                        <button class="message-close" onclick="dismissMessage()">×</button>
+                    </div>
+                {% endif %}
+                
+                <div class="hero-content">
+                    <h1 class="hero-title">Welcome to SkillSwap</h1>
+                    <p class="hero-subtitle">Connect with others, share your skills, and learn something new. Join our community of learners and teachers.</p>
+                    <div class="hero-buttons">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                        {% else %}
+                            <a href="{{ url_for('signup') }}" class="btn btn-primary">Get Started</a>
+                        {% endif %}
+                        <a href="#features" class="btn btn-secondary">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-placeholder">
+                        <span>🎓</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title">Why Choose SkillSwap?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤝</div>
+                        <h3>Connect</h3>
+                        <p>Find people with skills you want to learn and share your expertise with others.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Learn</h3>
+                        <p>Access a wide variety of skills and knowledge from our diverse community.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>Grow</h3>
+                        <p>Develop new skills and advance your personal and professional development.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="learn-more" class="cta">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Start Your Learning Journey?</h2>
+                    <p>Join thousands of learners who are already benefiting from SkillSwap.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary">Join Now</a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillHub</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        function dismissMessage() {
+            // Hide the message by removing it from the DOM
+            const message = document.querySelector('.platform-message');
+            if (message) {
+                message.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.full_name }}'s Profile - SkillHub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="SkillHub Logo">
+                    <h1>SkillHub</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('requests') }}" class="nav-link">
+                                Requests
+                                {% if pending_requests_count > 0 %}
+                                    <span class="notification-badge">{{ pending_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('chat') }}" class="nav-link">
+                                Chats
+                                {% if unread_messages_count > 0 %}
+                                    <span class="notification-badge">{{ unread_messages_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">{{ user.full_name }}'s Profile</h1>
+                <p class="page-subtitle">Professional profile and skills</p>
+            </div>
+        </section>
+
+        <section class="profile-content">
+            <div class="container">
+                <div class="profile-view-container">
+                    <!-- Full Profile Display -->
+                    <div class="profile-display">
+                        <div class="profile-header">
+                            <div class="profile-photo-section">
+                                {% if user.profile_photo %}
+                                    <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo" class="profile-photo">
+                                {% else %}
+                                    <div class="profile-photo-placeholder">
+                                        <span>{{ user.full_name[0].upper() }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="profile-info">
+                                <h2>{{ user.full_name }}</h2>
+                                {% if profile.current_profession %}
+                                    <p class="profession">{{ profile.current_profession }}</p>
+                                {% endif %}
+                                {% if profile.current_organization %}
+                                    <p class="organization">at {{ profile.current_organization }}</p>
+                                {% endif %}
+                                {% if profile.location %}
+                                    <p class="location">📍 {{ profile.location }}</p>
+                                {% endif %}
+                                {% if profile.experience_years %}
+                                    <p class="experience">{{ profile.experience_years }} years of experience</p>
+                                {% endif %}
+                                <div class="user-rating">
+                                    {% set feedbacks = user.received_feedbacks %}
+                                    {% if feedbacks %}
+                                        {% set avg_rating = feedbacks|map(attribute='rating')|sum / feedbacks|length %}
+                                        <div class="stars-display">
+                                            {% for i in range(1, 6) %}
+                                                <span class="star {% if i <= avg_rating %}filled{% endif %}">★</span>
+                                            {% endfor %}
+                                        </div>
+                                        <span class="rating-text">{{ "%.1f"|format(avg_rating) }} ({{ feedbacks|length }} reviews)</span>
+                                    {% else %}
+                                        <span class="no-rating">No reviews yet</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact & Social Links -->
+                        <div class="profile-section">
+                            <h3>Contact & Social</h3>
+                            <div class="contact-links">
+                                <p class="email">📧 {{ user.email }}</p>
+                                {% if profile.website %}
+                                    <p class="website">🌐 <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></p>
+                                {% endif %}
+                                {% if profile.linkedin %}
+                                    <p class="linkedin">💼 <a href="{{ profile.linkedin }}" target="_blank">LinkedIn</a></p>
+                                {% endif %}
+                                {% if profile.github %}
+                                    <p class="github">💻 <a href="{{ profile.github }}" target="_blank">GitHub</a></p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Skills Section -->
+                        <div class="profile-section">
+                            <h3>Skills You Offer</h3>
+                            <div class="skills-tags">
+                                {% for skill in skills_offering %}
+                                    <span class="skill-tag offering">{{ skill }}</span>
+                                {% else %}
+                                    <span class="skill-tag none">None listed</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <h3>Skills You Want to Learn</h3>
+                            <div class="skills-tags">
+                                {% for skill in skills_wanting %}
+                                    <span class="skill-tag wanting">{{ skill }}</span>
+                                {% else %}
+                                    <span class="skill-tag none">None listed</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Experience Section -->
+                        {% if profile.experience_details %}
+                            <div class="profile-section">
+                                <h3>Experience</h3>
+                                <div class="experience-content">
+                                    <p>{{ profile.experience_details }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Education Section -->
+                        {% if education %}
+                            <div class="profile-section">
+                                <h3>Education</h3>
+                                <div class="education-list">
+                                    {% for edu in education %}
+                                        <div class="education-item">
+                                            <span class="education-text">{{ edu }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Certificates Section -->
+                        {% if certificates %}
+                            <div class="profile-section">
+                                <h3>Certificates</h3>
+                                <div class="certificates-list">
+                                    {% for cert in certificates %}
+                                        <div class="certificate-item">
+                                            <span class="certificate-text">{{ cert }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Bio Section -->
+                        {% if profile.bio %}
+                            <div class="profile-section">
+                                <h3>About</h3>
+                                <div class="bio-content">
+                                    <p>{{ profile.bio }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Availability & Settings -->
+                        <div class="profile-section">
+                            <h3>Availability & Settings</h3>
+                            <div class="settings-info">
+                                <p><strong>Availability:</strong> {{ profile.availability.title() if profile.availability else 'Not set' }}</p>
+                                <p><strong>Profile Status:</strong> 
+                                    <span class="status-badge {% if profile.is_public %}status-public{% else %}status-private{% endif %}">
+                                        {{ 'Public' if profile.is_public else 'Private' }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Feedback Section -->
+                        <div class="profile-section">
+                            <h3>Reviews & Feedback</h3>
+                            {% set feedbacks = user.received_feedbacks %}
+                            {% if feedbacks %}
+                                {% set avg_rating = feedbacks|map(attribute='rating')|sum / feedbacks|length %}
+                                <div class="feedback-overview">
+                                    <div class="rating-display">
+                                        <div class="rating-score">
+                                            <span class="rating-number">{{ "%.1f"|format(avg_rating) }}</span>
+                                            <span class="rating-max">/5</span>
+                                        </div>
+                                        <div class="rating-details">
+                                            <div class="rating-label">Average Rating</div>
+                                            <div class="stars-display large">
+                                                {% for i in range(1, 6) %}
+                                                    <span class="star {% if i <= avg_rating %}filled{% endif %}">★</span>
+                                                {% endfor %}
+                                            </div>
+                                            <span class="rating-count">{{ feedbacks|length }} review{{ 's' if feedbacks|length != 1 else '' }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Rating Breakdown -->
+                                    <div class="rating-breakdown">
+                                        {% set rating_counts = {} %}
+                                        {% for i in range(1, 6) %}
+                                            {% set rating_counts = rating_counts.update({i: feedbacks|selectattr('rating', 'equalto', i)|list|length}) %}
+                                        {% endfor %}
+                                        
+                                        {% for i in range(5, 0, -1) %}
+                                            {% set count = feedbacks|selectattr('rating', 'equalto', i)|list|length %}
+                                            {% if count > 0 %}
+                                                <div class="rating-bar">
+                                                    <span class="rating-bar-label">{{ i }}</span>
+                                                    <div class="rating-bar-container">
+                                                        <div class="rating-bar-fill" style="width: {{ (count / feedbacks|length * 100)|round(1) }}%"></div>
+                                                    </div>
+                                                    <span class="rating-bar-count">{{ count }}</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Recent Reviews -->
+                                <div class="recent-reviews">
+                                    <h4>Recent Reviews</h4>
+                                    <div class="reviews-container">
+                                        {% for feedback in feedbacks[:3] %}
+                                            <div class="review-card">
+                                                <div class="review-header">
+                                                    <div class="reviewer-info">
+                                                        <h5>{{ feedback.reviewer.full_name }}</h5>
+                                                        <span class="review-date">{{ feedback.created_at.strftime('%B %d, %Y') }}</span>
+                                                    </div>
+                                                    <div class="review-rating">
+                                                        <div class="stars-display small">
+                                                            {% for i in range(1, 6) %}
+                                                                <span class="star {% if i <= feedback.rating %}filled{% endif %}">★</span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if feedback.comment %}
+                                                    <div class="review-comment">
+                                                        <p>{{ feedback.comment }}</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    {% if feedbacks|length > 3 %}
+                                        <div class="view-all-reviews">
+                                            <a href="{{ url_for('view_feedback', user_id=user.id) }}" class="btn btn-secondary">
+                                                View All {{ feedbacks|length }} Reviews
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="empty-feedback">
+                                    <div class="empty-icon">⭐</div>
+                                    <h4>No reviews yet</h4>
+                                    <p>{{ user.full_name }} hasn't received any feedback from swap partners yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="profile-actions">
+                            {% if current_user.is_authenticated and current_user.id != user.id %}
+                                <div class="action-buttons">
+                                    {% if request_status == 'pending' %}
+                                        <button class="btn btn-warning" disabled>
+                                            <i class="fas fa-clock"></i> Request Pending
+                                        </button>
+                                    {% elif request_status == 'accepted' %}
+                                        <button class="btn btn-success" disabled>
+                                            <i class="fas fa-check"></i> Request Accepted
+                                        </button>
+                                    {% elif request_status == 'rejected' %}
+                                        <button class="btn btn-danger" disabled>
+                                            <i class="fas fa-times"></i> Request Rejected
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-primary" onclick="openRequestModal({{ user.id }}, '{{ user.full_name }}')">
+                                            <i class="fas fa-exchange-alt"></i> Request Skill Swap
+                                        </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('start_chat', user_id=user.id) }}" class="btn btn-secondary-dark">
+                                        <i class="fas fa-comments"></i> Chat Now
+                                    </a>
+                                    {% if feedbacks %}
+                                        <a href="{{ url_for('view_feedback', user_id=user.id) }}" class="btn btn-secondary">
+                                            <i class="fas fa-star"></i> View Reviews
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% elif not current_user.is_authenticated %}
+                                <a href="{{ url_for('login') }}" class="btn btn-primary">
+                                    Login to Request Swap
+                                </a>
+                            {% else %}
+                                <span class="own-profile">This is your profile</span>
+                            {% endif %}
+                            <a href="{{ url_for('browse') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Browse
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillHub</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        function openRequestModal(userId, userName) {
+            const modal = document.getElementById('requestModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const receiverIdInput = document.getElementById('receiver_id');
+            
+            modalTitle.textContent = `Send Swap Request to ${userName}`;
+            receiverIdInput.value = userId;
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeRequestModal() {
+            const modal = document.getElementById('requestModal');
+            modal.style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('requestModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+    
+    <!-- Include Floating Chat Button -->
+    {% include 'chat_button.html' %}
+    
+    <!-- Request Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Send Swap Request</h3>
+                <span class="close" onclick="closeRequestModal()">&times;</span>
+            </div>
+            <form method="POST" action="{{ url_for('send_request') }}">
+                <input type="hidden" id="receiver_id" name="receiver_id">
+                <div class="form-group">
+                    <label for="message">Message (Optional)</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Tell them why you'd like to swap skills..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRequestModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - SkillHub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="in-chat-room">
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="SkillHub Logo">
+                    <h1>SkillHub</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('requests') }}" class="nav-link">
+                                Requests
+                                {% if pending_requests_count > 0 %}
+                                    <span class="notification-badge">{{ pending_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('chat') }}" class="nav-link active">Chats</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <div class="chat-room-container">
+            <!-- Chat Header -->
+            <div class="chat-room-header">
+                <div class="chat-header-left">
+                    <a href="{{ url_for('chat') }}" class="back-button">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div class="chat-user-info">
+                        <div class="chat-user-avatar">
+                            {% if other_user.profile_photo %}
+                                <img src="{{ url_for('static', filename=other_user.profile_photo) }}" alt="Profile Photo">
+                            {% else %}
+                                <div class="chat-user-avatar-placeholder">
+                                    <span>{{ other_user.full_name[0].upper() }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="chat-user-details">
+                            <h3>{{ other_user.full_name }}</h3>
+                            <span class="chat-status">{{ online_status }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <a href="{{ url_for('view_profile', user_id=other_user.id) }}" class="btn btn-secondary btn-small">
+                        <i class="fas fa-user"></i> View Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div class="messages-container" id="messagesContainer">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message {% if message.sender_id == current_user.id %}message-sent{% else %}message-received{% endif %}">
+                            <div class="message-content">
+                                <div class="message-text">{{ message.message }}</div>
+                                <div class="message-time">{{ message.created_at.strftime('%H:%M') }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-messages">
+                        <div class="no-messages-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation by sending a message!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Message Input -->
+            <div class="message-input-container">
+                <form id="messageForm" class="message-form">
+                    <input type="hidden" id="chatId" value="{{ chat.id }}">
+                    <div class="message-input-wrapper">
+                        <input type="text" id="messageInput" placeholder="Type a message..." class="message-input" autocomplete="off">
+                        <button type="submit" class="send-button" id="sendButton">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Auto-scroll to bottom
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Scroll to bottom on page load
+        window.onload = function() {
+            scrollToBottom();
+        };
+
+        // Message sending functionality
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            const chatId = document.getElementById('chatId').value;
+            
+            if (!message) return;
+            
+            // Disable send button and show loading
+            const sendButton = document.getElementById('sendButton');
+            const originalContent = sendButton.innerHTML;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Send message via AJAX
+            fetch('/chat/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `chat_id=${chatId}&message=${encodeURIComponent(message)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Add message to UI
+                    addMessageToUI(data.message, true);
+                    messageInput.value = '';
+                    scrollToBottom();
+                    
+                    // Clear any error messages
+                    clearErrorMessage();
+                } else {
+                    showErrorMessage('Error sending message: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage('Network error. Please try again.');
+            })
+            .finally(() => {
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalContent;
+            });
+        });
+
+        // Add message to UI
+        function addMessageToUI(messageData, isMine) {
+            const container = document.getElementById('messagesContainer');
+            
+            // Remove no-messages div if it exists
+            const noMessagesDiv = container.querySelector('.no-messages');
+            if (noMessagesDiv) {
+                noMessagesDiv.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isMine ? 'message-sent' : 'message-received'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${messageData.message}</div>
+                    <div class="message-time">${messageData.created_at}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+        }
+
+        // Show error message
+        function showErrorMessage(message) {
+            clearErrorMessage();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'chat-error-message';
+            errorDiv.innerHTML = `
+                <div class="error-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="error-close">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Clear error message
+        function clearErrorMessage() {
+            const existingError = document.querySelector('.chat-error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+
+        // Real-time message updates
+        let lastMessageCount = 0;
+        let isUpdating = false;
+
+        function updateMessages() {
+            if (isUpdating) return;
+            
+            isUpdating = true;
+            const chatId = document.getElementById('chatId').value;
+            
+            fetch(`/chat/get_messages/${chatId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('messagesContainer');
+                    const currentMessageCount = container.querySelectorAll('.message').length;
+                    
+                    if (data.messages.length > currentMessageCount) {
+                        // Clear and rebuild messages
+                        container.innerHTML = '';
+                        
+                        data.messages.forEach(message => {
+                            addMessageToUI(message, message.is_mine);
+                        });
+                        
+                        scrollToBottom();
+                        
+                        // Show notification for new messages if not focused
+                        if (data.messages.length > lastMessageCount && !document.hasFocus()) {
+                            showNewMessageNotification(data.messages[data.messages.length - 1]);
+                        }
+                        
+                        lastMessageCount = data.messages.length;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing messages:', error);
+            })
+            .finally(() => {
+                isUpdating = false;
+            });
+        }
+
+        // Show notification for new messages
+        function showNewMessageNotification(message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('New Message', {
+                    body: message.message,
+                    icon: '/static/images/favicon.ico'
+                });
+            }
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Auto-refresh messages every 3 seconds
+        setInterval(updateMessages, 3000);
+
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('messageForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Focus on input when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').focus();
+        });
+    </script>
+    
+    <!-- Include Floating Chat Button -->
+    {% include 'chat_button.html' %}
+</body>
+</html> 

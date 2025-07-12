@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swap Requests - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('requests') }}" class="nav-link active">
+                            Requests
+                            {% if pending_requests_count > 0 %}
+                                <span class="notification-badge">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                    </li>
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">Swap Requests</h1>
+                <p class="page-subtitle">Manage your skill swap requests</p>
+            </div>
+        </section>
+
+        <section class="requests-content">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="requests-grid">
+                    <!-- Received Requests -->
+                    <div class="requests-section">
+                        <h2>Received Requests</h2>
+                        {% if received_requests %}
+                            <div class="requests-list">
+                                {% for request in received_requests %}
+                                    <div class="request-card received">
+                                        <div class="request-header">
+                                            <div class="user-info">
+                                                <h3>{{ request.sender.full_name }}</h3>
+                                                <span class="request-date">{{ request.created_at.strftime('%B %d, %Y') }}</span>
+                                            </div>
+                                            <span class="status-badge status-{{ request.status }}">
+                                                {{ request.status.title() }}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if request.message %}
+                                            <div class="request-message">
+                                                <p>{{ request.message }}</p>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="request-actions">
+                                            {% if request.status == 'pending' %}
+                                                <form method="POST" action="{{ url_for('respond_request') }}" style="display: inline;">
+                                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                    <button type="submit" name="action" value="accept" class="btn btn-success btn-small">
+                                                        Accept
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('respond_request') }}" style="display: inline;">
+                                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                    <button type="submit" name="action" value="reject" class="btn btn-danger btn-small">
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            {% elif request.status == 'accepted' %}
+                                                <span class="accepted-status">✅ Request accepted</span>
+                                                <div class="feedback-actions">
+                                                    <a href="{{ url_for('give_feedback', swap_id=request.id) }}" class="btn btn-primary btn-small">
+                                                        Give Feedback
+                                                    </a>
+                                                </div>
+                                            {% elif request.status == 'rejected' %}
+                                                <span class="rejected-status">❌ Request rejected</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">📥</div>
+                                <h3>No received requests</h3>
+                                <p>You haven't received any swap requests yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Sent Requests -->
+                    <div class="requests-section">
+                        <h2>Sent Requests</h2>
+                        {% if sent_requests %}
+                            <div class="requests-list">
+                                {% for request in sent_requests %}
+                                    <div class="request-card sent">
+                                        <div class="request-header">
+                                            <div class="user-info">
+                                                <h3>{{ request.receiver.full_name }}</h3>
+                                                <span class="request-date">{{ request.created_at.strftime('%B %d, %Y') }}</span>
+                                            </div>
+                                            <span class="status-badge status-{{ request.status }}">
+                                                {{ request.status.title() }}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if request.message %}
+                                            <div class="request-message">
+                                                <p>{{ request.message }}</p>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="request-actions">
+                                            {% if request.status == 'pending' %}
+                                                <form method="POST" action="{{ url_for('cancel_request') }}" style="display: inline;">
+                                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                    <button type="submit" class="btn btn-secondary btn-small">
+                                                        Cancel Request
+                                                    </button>
+                                                </form>
+                                            {% elif request.status == 'accepted' %}
+                                                <span class="accepted-status">✅ Request accepted</span>
+                                                <div class="feedback-actions">
+                                                    <a href="{{ url_for('give_feedback', swap_id=request.id) }}" class="btn btn-primary btn-small">
+                                                        Give Feedback
+                                                    </a>
+                                                </div>
+                                            {% elif request.status == 'rejected' %}
+                                                <span class="rejected-status">❌ Request rejected</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">📤</div>
+                                <h3>No sent requests</h3>
+                                <p>You haven't sent any swap requests yet.</p>
+                                <a href="{{ url_for('browse') }}" class="btn btn-primary">Browse Users</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

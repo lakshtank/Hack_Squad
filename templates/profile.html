@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('profile') }}" class="nav-link active">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('requests') }}" class="nav-link">
+                            Requests
+                            {% if pending_requests_count > 0 %}
+                                <span class="notification-badge">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                    </li>
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">Professional Profile</h1>
+                <p class="page-subtitle">{{ 'Update your professional profile' if profile else 'Complete your professional profile' }}</p>
+            </div>
+        </section>
+
+        <section class="profile-content">
+            <div class="container">
+                {% set editing = request.args.get('edit') == '1' %}
+                <div class="profile-form-container">
+                    {% if profile and not editing %}
+                        <!-- Profile Display View -->
+                        <div class="profile-display">
+                            <div class="profile-header">
+                                <div class="profile-photo-section">
+                                    {% if current_user.profile_photo %}
+                                        <img src="{{ url_for('static', filename=current_user.profile_photo) }}" alt="Profile Photo" class="profile-photo">
+                                    {% else %}
+                                        <div class="profile-photo-placeholder">
+                                            <span>{{ current_user.full_name[0].upper() }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="profile-info">
+                                    <h2>{{ current_user.full_name }}</h2>
+                                    {% if profile.current_profession %}
+                                        <p class="profession">{{ profile.current_profession }}</p>
+                                    {% endif %}
+                                    {% if profile.current_organization %}
+                                        <p class="organization">at {{ profile.current_organization }}</p>
+                                    {% endif %}
+                                    {% if profile.location %}
+                                        <p class="location">📍 {{ profile.location }}</p>
+                                    {% endif %}
+                                    {% if profile.experience_years %}
+                                        <p class="experience">{{ profile.experience_years }} years of experience</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Contact & Social Links -->
+                            <div class="profile-section">
+                                <h3>Contact & Social</h3>
+                                <div class="contact-links">
+                                    <p class="email">📧 {{ current_user.email }}</p>
+                                    {% if profile.website %}
+                                        <p class="website">🌐 <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></p>
+                                    {% endif %}
+                                    {% if profile.linkedin %}
+                                        <p class="linkedin">💼 <a href="{{ profile.linkedin }}" target="_blank">LinkedIn</a></p>
+                                    {% endif %}
+                                    {% if profile.github %}
+                                        <p class="github">💻 <a href="{{ profile.github }}" target="_blank">GitHub</a></p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Skills Section -->
+                            <div class="profile-section">
+                                <h3>Skills You Offer</h3>
+                                <div class="skills-tags">
+                                    {% for skill in skills_offering %}
+                                        <span class="skill-tag offering">{{ skill }}</span>
+                                    {% else %}
+                                        <span class="skill-tag none">None listed</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="profile-section">
+                                <h3>Skills You Want to Learn</h3>
+                                <div class="skills-tags">
+                                    {% for skill in skills_wanting %}
+                                        <span class="skill-tag wanting">{{ skill }}</span>
+                                    {% else %}
+                                        <span class="skill-tag none">None listed</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Experience Section -->
+                            {% if profile.experience_details %}
+                                <div class="profile-section">
+                                    <h3>Experience</h3>
+                                    <div class="experience-content">
+                                        <p>{{ profile.experience_details }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Education Section -->
+                            {% if education %}
+                                <div class="profile-section">
+                                    <h3>Education</h3>
+                                    <div class="education-list">
+                                        {% for edu in education %}
+                                            <div class="education-item">
+                                                <span class="education-text">{{ edu }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Certificates Section -->
+                            {% if certificates %}
+                                <div class="profile-section">
+                                    <h3>Certificates</h3>
+                                    <div class="certificates-list">
+                                        {% for cert in certificates %}
+                                            <div class="certificate-item">
+                                                <span class="certificate-text">{{ cert }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Bio Section -->
+                            {% if profile.bio %}
+                                <div class="profile-section">
+                                    <h3>About</h3>
+                                    <div class="bio-content">
+                                        <p>{{ profile.bio }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Availability & Settings -->
+                            <div class="profile-section">
+                                <h3>Availability & Settings</h3>
+                                <div class="settings-info">
+                                    <p><strong>Availability:</strong> {{ profile.availability.title() if profile.availability else 'Not set' }}</p>
+                                    <p><strong>Profile Status:</strong> 
+                                        <span class="status-badge {% if profile.is_public %}status-public{% else %}status-private{% endif %}">
+                                            {{ 'Public' if profile.is_public else 'Private' }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a href="{{ url_for('profile', edit=1) }}" class="btn btn-primary" style="margin-top:1rem;">Edit Profile</a>
+                        </div>
+                    {% endif %}
+
+                    {% if not profile or editing %}
+                        <!-- Profile Form -->
+                        <div class="profile-form">
+                            <h2>{{ 'Update Your Profile' if profile else 'Complete Your Profile' }}</h2>
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ category }}">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            
+                            <form method="POST" class="form">
+                                <!-- Basic Information -->
+                                <div class="form-section">
+                                    <h3>Basic Information</h3>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="current_profession">Current Profession</label>
+                                            <input type="text" id="current_profession" name="current_profession" 
+                                                   value="{{ profile.current_profession if profile else '' }}" 
+                                                   placeholder="e.g., Software Engineer, Designer, Teacher">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="current_organization">Current Organization</label>
+                                            <input type="text" id="current_organization" name="current_organization" 
+                                                   value="{{ profile.current_organization if profile else '' }}" 
+                                                   placeholder="e.g., Google, Freelance, University">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="location">Location</label>
+                                            <input type="text" id="location" name="location" 
+                                                   value="{{ profile.location if profile else '' }}" 
+                                                   placeholder="e.g., San Francisco, CA">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="experience_years">Years of Experience</label>
+                                            <input type="number" id="experience_years" name="experience_years" 
+                                                   value="{{ profile.experience_years if profile else '' }}" 
+                                                   min="0" max="50" placeholder="e.g., 5">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact & Social Links -->
+                                <div class="form-section">
+                                    <h3>Contact & Social Links</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="website">Website</label>
+                                        <input type="url" id="website" name="website" 
+                                               value="{{ profile.website if profile else '' }}" 
+                                               placeholder="https://yourwebsite.com">
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="linkedin">LinkedIn</label>
+                                            <input type="url" id="linkedin" name="linkedin" 
+                                                   value="{{ profile.linkedin if profile else '' }}" 
+                                                   placeholder="https://linkedin.com/in/yourprofile">
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="github">GitHub</label>
+                                            <input type="url" id="github" name="github" 
+                                                   value="{{ profile.github if profile else '' }}" 
+                                                   placeholder="https://github.com/yourusername">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Skills Section -->
+                                <div class="form-section">
+                                    <h3>Skills</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="skills_offering">Skills You Offer *</label>
+                                        <div class="skills-input-container">
+                                            <input type="text" id="skill_input_offering" placeholder="Type a skill and press Enter">
+                                            <div class="skills-tags" id="skills_offering_tags">
+                                                {% for skill in skills_offering %}
+                                                    <span class="skill-tag">
+                                                        {{ skill }}
+                                                        <input type="hidden" name="skills_offering" value="{{ skill }}">
+                                                        <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="form-help">Press Enter to add each skill</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="skills_wanting">Skills You Want to Learn *</label>
+                                        <div class="skills-input-container">
+                                            <input type="text" id="skill_input_wanting" placeholder="Type a skill and press Enter">
+                                            <div class="skills-tags" id="skills_wanting_tags">
+                                                {% for skill in skills_wanting %}
+                                                    <span class="skill-tag">
+                                                        {{ skill }}
+                                                        <input type="hidden" name="skills_wanting" value="{{ skill }}">
+                                                        <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="form-help">Press Enter to add each skill</small>
+                                    </div>
+                                </div>
+
+                                <!-- Experience Section -->
+                                <div class="form-section">
+                                    <h3>Experience</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="experience_details">Experience Details</label>
+                                        <textarea id="experience_details" name="experience_details" rows="4" 
+                                                  placeholder="Describe your professional experience, achievements, and expertise...">{{ profile.experience_details if profile else '' }}</textarea>
+                                        <small class="form-help">Share your professional background and key achievements</small>
+                                    </div>
+                                </div>
+
+                                <!-- Education Section -->
+                                <div class="form-section">
+                                    <h3>Education</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="education">Education</label>
+                                        <div class="skills-input-container">
+                                            <input type="text" id="education_input" placeholder="Type education entry and press Enter">
+                                            <div class="skills-tags" id="education_tags">
+                                                {% for edu in education %}
+                                                    <span class="skill-tag">
+                                                        {{ edu }}
+                                                        <input type="hidden" name="education" value="{{ edu }}">
+                                                        <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="form-help">Press Enter to add each education entry (e.g., "BS Computer Science, Stanford University")</small>
+                                    </div>
+                                </div>
+
+                                <!-- Certificates Section -->
+                                <div class="form-section">
+                                    <h3>Certificates</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="certificates">Certificates</label>
+                                        <div class="skills-input-container">
+                                            <input type="text" id="certificate_input" placeholder="Type certificate and press Enter">
+                                            <div class="skills-tags" id="certificates_tags">
+                                                {% for cert in certificates %}
+                                                    <span class="skill-tag">
+                                                        {{ cert }}
+                                                        <input type="hidden" name="certificates" value="{{ cert }}">
+                                                        <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="form-help">Press Enter to add each certificate (e.g., "AWS Certified Solutions Architect")</small>
+                                    </div>
+                                </div>
+
+                                <!-- Availability & Bio -->
+                                <div class="form-section">
+                                    <h3>Availability & Bio</h3>
+                                    
+                                    <div class="form-group">
+                                        <label for="availability">Availability *</label>
+                                        <select id="availability" name="availability" required>
+                                            <option value="">Select your availability</option>
+                                            <option value="weekdays" {% if profile and profile.availability == 'weekdays' %}selected{% endif %}>Weekdays</option>
+                                            <option value="weekends" {% if profile and profile.availability == 'weekends' %}selected{% endif %}>Weekends</option>
+                                            <option value="evenings" {% if profile and profile.availability == 'evenings' %}selected{% endif %}>Evenings</option>
+                                            <option value="flexible" {% if profile and profile.availability == 'flexible' %}selected{% endif %}>Flexible</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="bio">Bio</label>
+                                        <textarea id="bio" name="bio" rows="4" 
+                                                  placeholder="Tell others about yourself, your passion for teaching/learning...">{{ profile.bio if profile else '' }}</textarea>
+                                        <small class="form-help">Share your story and what motivates you to teach/learn</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" name="is_public" {% if not profile or profile.is_public %}checked{% endif %}>
+                                            <span class="checkmark"></span>
+                                            Make my profile public
+                                        </label>
+                                        <small class="form-help">Public profiles are visible to other users</small>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-full">Save Profile</button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <!-- Profile Tips -->
+                    <div class="profile-info">
+                        <h3>Profile Tips</h3>
+                        <div class="tips-list">
+                            <div class="tip-item">
+                                <div class="tip-icon">💼</div>
+                                <div class="tip-content">
+                                    <h4>Professional Details</h4>
+                                    <p>Include your current role and organization to build credibility</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-icon">🎯</div>
+                                <div class="tip-content">
+                                    <h4>Specific Skills</h4>
+                                    <p>List specific skills like "Python Programming" instead of just "Programming"</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-icon">📚</div>
+                                <div class="tip-content">
+                                    <h4>Education & Certificates</h4>
+                                    <p>Add relevant education and certifications to showcase your expertise</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-icon">⏰</div>
+                                <div class="tip-content">
+                                    <h4>Set Availability</h4>
+                                    <p>Choose when you're available to help others learn</p>
+                                </div>
+                            </div>
+                            <div class="tip-item">
+                                <div class="tip-icon">🔗</div>
+                                <div class="tip-content">
+                                    <h4>Social Links</h4>
+                                    <p>Add your LinkedIn and GitHub to build professional connections</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Skills management
+        function addSkill(inputId, tagsContainerId) {
+            const input = document.getElementById(inputId);
+            const tagsContainer = document.getElementById(tagsContainerId);
+            const skill = input.value.trim();
+            
+            if (skill && skill.length > 0) {
+                const skillTag = document.createElement('span');
+                skillTag.className = 'skill-tag';
+                skillTag.innerHTML = `
+                    ${skill}
+                    <input type="hidden" name="${inputId.replace('skill_input_', 'skills_')}" value="${skill}">
+                    <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                `;
+                tagsContainer.appendChild(skillTag);
+                input.value = '';
+            }
+        }
+
+        function addEducation() {
+            const input = document.getElementById('education_input');
+            const tagsContainer = document.getElementById('education_tags');
+            const education = input.value.trim();
+            
+            if (education && education.length > 0) {
+                const educationTag = document.createElement('span');
+                educationTag.className = 'skill-tag';
+                educationTag.innerHTML = `
+                    ${education}
+                    <input type="hidden" name="education" value="${education}">
+                    <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                `;
+                tagsContainer.appendChild(educationTag);
+                input.value = '';
+            }
+        }
+
+        function addCertificate() {
+            const input = document.getElementById('certificate_input');
+            const tagsContainer = document.getElementById('certificates_tags');
+            const certificate = input.value.trim();
+            
+            if (certificate && certificate.length > 0) {
+                const certificateTag = document.createElement('span');
+                certificateTag.className = 'skill-tag';
+                certificateTag.innerHTML = `
+                    ${certificate}
+                    <input type="hidden" name="certificates" value="${certificate}">
+                    <button type="button" class="remove-skill" onclick="removeSkill(this)">×</button>
+                `;
+                tagsContainer.appendChild(certificateTag);
+                input.value = '';
+            }
+        }
+
+        function removeSkill(button) {
+            button.parentElement.remove();
+        }
+
+        // Event listeners for skill inputs
+        document.getElementById('skill_input_offering').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill('skill_input_offering', 'skills_offering_tags');
+            }
+        });
+
+        document.getElementById('skill_input_wanting').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill('skill_input_wanting', 'skills_wanting_tags');
+            }
+        });
+
+        // Event listeners for education and certificates
+        document.getElementById('education_input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addEducation();
+            }
+        });
+
+        document.getElementById('certificate_input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCertificate();
+            }
+        });
+    </script>
+</body>
+</html> 

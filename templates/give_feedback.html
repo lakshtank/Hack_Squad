@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Give Feedback - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('requests') }}" class="nav-link">Requests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                    </li>
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">Give Feedback</h1>
+                <p class="page-subtitle">Rate your experience with {{ reviewed_user.full_name }}</p>
+            </div>
+        </section>
+
+        <section class="feedback-content">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="feedback-form-container">
+                    <div class="swap-info">
+                        <h3>Swap Details</h3>
+                        <div class="swap-details">
+                            <p><strong>Swap Partner:</strong> {{ reviewed_user.full_name }}</p>
+                            <p><strong>Swap Date:</strong> {{ swap_request.created_at.strftime('%B %d, %Y') }}</p>
+                            {% if swap_request.message %}
+                                <p><strong>Original Message:</strong> "{{ swap_request.message }}"</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form method="POST" class="feedback-form">
+                        <input type="hidden" name="swap_id" value="{{ swap_request.id }}">
+                        
+                        <div class="form-group">
+                            <label for="rating">Rating *</label>
+                            <div class="rating-container">
+                                <div class="stars">
+                                    {% for i in range(1, 6) %}
+                                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" 
+                                               {% if existing_feedback and existing_feedback.rating == i %}checked{% endif %}
+                                               required>
+                                        <label for="star{{ i }}" class="star-label">★</label>
+                                    {% endfor %}
+                                </div>
+                                <div class="rating-labels">
+                                    <span>Poor</span>
+                                    <span>Fair</span>
+                                    <span>Good</span>
+                                    <span>Very Good</span>
+                                    <span>Excellent</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comment">Comment (Optional)</label>
+                            <textarea id="comment" name="comment" rows="4" 
+                                      placeholder="Share your experience with this swap partner...">{{ existing_feedback.comment if existing_feedback else '' }}</textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <a href="{{ url_for('requests') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if existing_feedback %}Update Feedback{% else %}Submit Feedback{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

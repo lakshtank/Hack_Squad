@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Messages - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap Admin</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_users') }}" class="nav-link">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_swaps') }}" class="nav-link">Swaps</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_feedback') }}" class="nav-link">Feedback</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_message') }}" class="nav-link active">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin_logout') }}" class="nav-link">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">Platform Messages</h1>
+                <p class="page-subtitle">Send messages to all users</p>
+            </div>
+        </section>
+
+        <section class="admin-content">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="message-form-container">
+                    <div class="message-form-card">
+                        <div class="message-form-header">
+                            <h2>📢 Send Platform Message</h2>
+                            <p>This message will be displayed to all users as a pop-up alert</p>
+                        </div>
+
+                        <form method="POST" class="message-form">
+                            <div class="form-group">
+                                <label for="message">Message *</label>
+                                <textarea id="message" name="message" rows="4" 
+                                          placeholder="Enter your platform-wide message here..." required></textarea>
+                                <small>This message will appear as a pop-up alert for all users</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message_type">Message Type</label>
+                                <select id="message_type" name="message_type">
+                                    <option value="info">Information (Blue)</option>
+                                    <option value="success">Success (Green)</option>
+                                    <option value="warning">Warning (Yellow)</option>
+                                    <option value="error">Error (Red)</option>
+                                </select>
+                            </div>
+
+                            <div class="message-preview">
+                                <h3>Message Preview</h3>
+                                <div class="preview-alert alert-info">
+                                    <p id="preview-text">Your message will appear here...</p>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="clearMessage()">Clear</button>
+                                <button type="submit" class="btn btn-primary">Send Platform Message</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap Admin</h3>
+                    <p>Administrative panel for SkillSwap platform.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('admin_users') }}">Users</a></li>
+                        <li><a href="{{ url_for('admin_swaps') }}">Swaps</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li><a href="{{ url_for('admin_feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('admin_message') }}">Messages</a></li>
+                        <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap Admin Panel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Live preview functionality
+        const messageTextarea = document.getElementById('message');
+        const previewText = document.getElementById('preview-text');
+        const messageType = document.getElementById('message_type');
+        const previewAlert = document.querySelector('.preview-alert');
+
+        messageTextarea.addEventListener('input', updatePreview);
+        messageType.addEventListener('change', updatePreview);
+
+        function updatePreview() {
+            const message = messageTextarea.value || 'Your message will appear here...';
+            const type = messageType.value;
+            
+            previewText.textContent = message;
+            
+            // Update alert class
+            previewAlert.className = `preview-alert alert-${type}`;
+        }
+
+        function clearMessage() {
+            messageTextarea.value = '';
+            updatePreview();
+        }
+
+        // Initialize preview
+        updatePreview();
+    </script>
+</body>
+</html> 

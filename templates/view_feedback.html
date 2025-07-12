@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.full_name }}'s Feedback - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('requests') }}" class="nav-link">Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                        </li>
+                        <li class="nav-item admin-nav-item">
+                            <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">{{ user.full_name }}'s Feedback</h1>
+                <p class="page-subtitle">Reviews from swap partners</p>
+            </div>
+        </section>
+
+        <section class="feedback-content">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="feedback-overview">
+                    <div class="user-info-card">
+                        <div class="user-avatar">
+                            {% if user.profile_photo %}
+                                <img src="{{ url_for('static', filename=user.profile_photo) }}" alt="Profile Photo">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    <span>{{ user.full_name[0].upper() }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="user-details">
+                            <h2>{{ user.full_name }}</h2>
+                            {% if user.location %}
+                                <p class="user-location">📍 {{ user.location }}</p>
+                            {% endif %}
+                            {% if total_feedback > 0 %}
+                                <div class="rating-display">
+                                    <div class="rating-score">
+                                        <span class="rating-number">{{ "%.1f"|format(avg_rating) }}</span>
+                                        <span class="rating-max">/5</span>
+                                    </div>
+                                    <div class="rating-details">
+                                        <div class="rating-label">Average Rating</div>
+                                        <div class="stars-display large">
+                                            {% for i in range(1, 6) %}
+                                                <span class="star {% if i <= avg_rating %}filled{% endif %}">★</span>
+                                            {% endfor %}
+                                        </div>
+                                        <span class="rating-count">{{ total_feedback }} review{{ 's' if total_feedback != 1 else '' }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Rating Breakdown -->
+                                <div class="rating-breakdown">
+                                    {% for i in range(5, 0, -1) %}
+                                        {% set count = feedbacks|selectattr('rating', 'equalto', i)|list|length %}
+                                        {% if count > 0 %}
+                                            <div class="rating-bar">
+                                                <span class="rating-bar-label">{{ i }}</span>
+                                                <div class="rating-bar-container">
+                                                    <div class="rating-bar-fill" style="width: {{ (count / total_feedback * 100)|round(1) }}%"></div>
+                                                </div>
+                                                <span class="rating-bar-count">{{ count }}</span>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="no-rating">
+                                    <span>No reviews yet</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-list">
+                    {% if feedbacks %}
+                        <h3>All Reviews</h3>
+                        <div class="reviews-container">
+                            {% for feedback in feedbacks %}
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <h4>{{ feedback.reviewer.full_name }}</h4>
+                                            <span class="review-date">{{ feedback.created_at.strftime('%B %d, %Y') }}</span>
+                                        </div>
+                                        <div class="review-rating">
+                                            <div class="stars-display">
+                                                {% for i in range(1, 6) %}
+                                                    <span class="star {% if i <= feedback.rating %}filled{% endif %}">★</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if feedback.comment %}
+                                        <div class="review-comment">
+                                            <p>{{ feedback.comment }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-feedback">
+                            <div class="empty-icon">⭐</div>
+                            <h3>No reviews yet</h3>
+                            <p>{{ user.full_name }} hasn't received any feedback from swap partners yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="back-actions">
+                    <a href="{{ url_for('browse') }}" class="btn btn-secondary">Back to Browse</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

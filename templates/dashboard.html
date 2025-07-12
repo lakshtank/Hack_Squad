@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SkillSwap</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h1>SkillSwap</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('homepage') }}" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('browse') }}" class="nav-link">Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('requests') }}" class="nav-link">
+                            Requests
+                            {% if pending_requests_count > 0 %}
+                                <span class="notification-badge">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                    </li>
+                    <li class="nav-item admin-nav-item">
+                        <a href="{{ url_for('admin_login') }}" class="nav-link admin-link">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="page-header">
+            <div class="container">
+                <h1 class="page-title">Welcome, {{ current_user.full_name }}!</h1>
+                <p class="page-subtitle">Your SkillSwap Dashboard</p>
+            </div>
+        </section>
+
+        <section class="dashboard-content">
+            <div class="container">
+                <div class="dashboard-grid">
+                    <!-- User Profile Card -->
+                    <div class="dashboard-card profile-card">
+                        <div class="profile-header">
+                            <div class="profile-photo">
+                                {% if current_user.profile_photo %}
+                                    <img src="{{ url_for('static', filename=current_user.profile_photo) }}" alt="Profile Photo">
+                                {% else %}
+                                    <div class="profile-placeholder">
+                                        <span>{{ current_user.full_name[0].upper() }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="profile-info">
+                                <h2>{{ current_user.full_name }}</h2>
+                                <p class="user-email">{{ current_user.email }}</p>
+                                {% if current_user.location %}
+                                    <p class="user-location">📍 {{ current_user.location }}</p>
+                                {% endif %}
+                                <p class="member-since">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="dashboard-card">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('profile') }}" class="btn btn-primary">Manage Profile</a>
+                            <a href="{{ url_for('browse') }}" class="btn btn-secondary">Browse Users</a>
+                            <a href="#" class="btn btn-secondary">Find Teachers</a>
+                            <a href="#" class="btn btn-secondary">My Messages</a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="dashboard-card">
+                        <h3>Recent Activity</h3>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon">🎓</div>
+                                <div class="activity-content">
+                                    <p>Welcome to SkillSwap!</p>
+                                    <small>Just now</small>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">✅</div>
+                                <div class="activity-content">
+                                    <p>Account created successfully</p>
+                                    <small>{{ current_user.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Swap Requests Summary -->
+                    <div class="dashboard-card">
+                        <h3>Swap Requests</h3>
+                        {% set pending_received = current_user.received_requests|selectattr('status', 'equalto', 'pending')|list %}
+                        {% set pending_sent = current_user.sent_requests|selectattr('status', 'equalto', 'pending')|list %}
+                        {% set accepted_swaps = current_user.received_requests|selectattr('status', 'equalto', 'accepted')|list + current_user.sent_requests|selectattr('status', 'equalto', 'accepted')|list %}
+                        
+                        <div class="requests-summary">
+                            {% if pending_received %}
+                                <div class="request-summary-item">
+                                    <div class="summary-icon">📥</div>
+                                    <div class="summary-content">
+                                        <h4>{{ pending_received|length }} Pending Request{{ 's' if pending_received|length != 1 else '' }}</h4>
+                                        <p>You have {{ pending_received|length }} request{{ 's' if pending_received|length != 1 else '' }} waiting for your response</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if pending_sent %}
+                                <div class="request-summary-item">
+                                    <div class="summary-icon">📤</div>
+                                    <div class="summary-content">
+                                        <h4>{{ pending_sent|length }} Sent Request{{ 's' if pending_sent|length != 1 else '' }}</h4>
+                                        <p>Waiting for response{{ 's' if pending_sent|length != 1 else '' }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if accepted_swaps %}
+                                <div class="request-summary-item">
+                                    <div class="summary-icon">🤝</div>
+                                    <div class="summary-content">
+                                        <h4>{{ accepted_swaps|length }} Active Swap{{ 's' if accepted_swaps|length != 1 else '' }}</h4>
+                                        <p>You have {{ accepted_swaps|length }} active skill swap{{ 's' if accepted_swaps|length != 1 else '' }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if not pending_received and not pending_sent and not accepted_swaps %}
+                                <div class="empty-requests">
+                                    <p>No swap requests yet</p>
+                                    <a href="{{ url_for('browse') }}" class="btn btn-primary btn-small">Browse Users</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="requests-actions">
+                            <a href="{{ url_for('requests') }}" class="btn btn-secondary btn-small">View All Requests</a>
+                        </div>
+                    </div>
+
+                    <!-- Profile Summary -->
+                    <div class="dashboard-card">
+                        <h3>Your Profile</h3>
+                        {% if current_user.profile %}
+                            <div class="profile-summary">
+                                {% if skills_offering and skills_offering|length > 0 %}
+                                    <div class="profile-section">
+                                        <h4>Skills You Offer</h4>
+                                        <div class="skills-display">
+                                            {% for skill in skills_offering %}
+                                                <span class="skill-badge">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="profile-section">
+                                        <h4>Skills You Offer</h4>
+                                        <div class="skills-display">
+                                            <span class="skill-badge none">None listed</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if skills_wanting and skills_wanting|length > 0 %}
+                                    <div class="profile-section">
+                                        <h4>Skills You Want</h4>
+                                        <div class="skills-display">
+                                            {% for skill in skills_wanting %}
+                                                <span class="skill-badge">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="profile-section">
+                                        <h4>Skills You Want</h4>
+                                        <div class="skills-display">
+                                            <span class="skill-badge none">None listed</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if current_user.profile.availability %}
+                                    <div class="profile-section">
+                                        <h4>Availability</h4>
+                                        <span class="availability-badge">{{ current_user.profile.availability.title() }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="profile-section">
+                                    <h4>Profile Status</h4>
+                                    <span class="status-badge {% if current_user.profile.is_public %}status-public{% else %}status-private{% endif %}">
+                                        {% if current_user.profile.is_public %}Public{% else %}Private{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="profile-empty">
+                                <p>You haven't set up your profile yet.</p>
+                                <a href="{{ url_for('profile') }}" class="btn btn-primary">Set Up Profile</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="dashboard-card">
+                        <h3>Your Stats</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-number">{{ skills_offering|length if skills_offering else 0 }}</div>
+                                <div class="stat-label">Skills Shared</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">{{ skills_wanting|length if skills_wanting else 0 }}</div>
+                                <div class="stat-label">Skills Wanted</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Connections</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Skills -->
+                    <div class="dashboard-card">
+                        <h3>Popular Skills to Learn</h3>
+                        <div class="skills-grid">
+                            <div class="skill-item">
+                                <div class="skill-icon">💻</div>
+                                <div class="skill-info">
+                                    <h4>Programming</h4>
+                                    <p>Python, JavaScript, React</p>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-icon">🎨</div>
+                                <div class="skill-info">
+                                    <h4>Design</h4>
+                                    <p>UI/UX, Graphic Design, Figma</p>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-icon">🌍</div>
+                                <div class="skill-info">
+                                    <h4>Languages</h4>
+                                    <p>Spanish, French, Mandarin</p>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-icon">🎵</div>
+                                <div class="skill-info">
+                                    <h4>Music</h4>
+                                    <p>Guitar, Piano, Singing</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community Updates -->
+                    <div class="dashboard-card">
+                        <h3>Community Updates</h3>
+                        <div class="community-updates">
+                            <div class="update-item">
+                                <p>🎉 <strong>New Feature:</strong> Skill ratings and reviews are now live!</p>
+                            </div>
+                            <div class="update-item">
+                                <p>👥 <strong>Community:</strong> 1,000+ new members joined this week</p>
+                            </div>
+                            <div class="update-item">
+                                <p>📚 <strong>Learning:</strong> New coding tutorials added to the platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting learners and teachers worldwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@skillswap.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 
