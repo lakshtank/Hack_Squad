@@ -55,7 +55,7 @@ body {
 .nav-logo h1 {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #1e293b;
     margin: 0;
 }
 
@@ -79,8 +79,8 @@ body {
 
 .nav-link:hover,
 .nav-link.active {
-    color: #2563eb;
-    background-color: #eff6ff;
+    color: #3b82f6;
+    background-color: #f1f5f9;
 }
 
 /* Notification Badge */
@@ -126,7 +126,7 @@ body {
 /* Hero Section */
 .hero {
     padding: 4rem 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     color: white;
 }
 
@@ -190,12 +190,12 @@ body {
 }
 
 .btn-primary {
-    background-color: #2563eb;
+    background-color: #3b82f6;
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #1d4ed8;
+    background-color: #2563eb;
     transform: translateY(-2px);
 }
 
@@ -220,7 +220,7 @@ body {
 
 .btn-secondary-light:hover {
     background-color: white;
-    color: #2563eb;
+    color: #3b82f6;
 }
 
 .btn-secondary-dark {
@@ -363,7 +363,7 @@ body {
 /* CTA Section */
 .cta {
     padding: 4rem 0;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     color: white;
     text-align: center;
 }
@@ -383,7 +383,7 @@ body {
 /* Page Header */
 .page-header {
     padding: 3rem 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     color: white;
     text-align: center;
 }
@@ -441,7 +441,7 @@ body {
 .stat-card h3 {
     font-size: 2rem;
     font-weight: 700;
-    color: #2563eb;
+    color: #3b82f6;
     margin-bottom: 0.5rem;
 }
 
@@ -684,7 +684,7 @@ body {
 }
 
 .footer-section ul li a:hover {
-    color: #2563eb;
+    color: #3b82f6;
 }
 
 .footer-bottom {
