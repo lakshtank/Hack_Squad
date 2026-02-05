@@ -1,19 +1,13 @@
-Team name : HackSquad
-Problem Name : Skill Swap platform
-leader : laksh tank ; tanklaksh.2007@gmail.com
-Member1 : nishtha shah; nishthashah0106@gmail.com
-Member2 : Kunj Vagani; vaghanikunj2448@gmail.com
-Memver3 : Patel Megh; megh2850@gmail.com
-Team Name : HackSquad
-Problem Statement : Skill Swap Platform
-Team Leader : Tank laksh
-Email : tanklaksh.2007@gmail.com
-Member 2 : Kunj vaghani
-Email : vaghanikunj2448@gmail.com
-Member 3 : Megh Patel
-Email : megh2850@gmail.com
-Member 4 : Nishtha Shah
-Email : nishthashah0106@gmail.com
+- Team Name : HackSquad
+- Problem Statement : Skill Swap Platform
+- Team Leader : Tank laksh
+- Email : tanklaksh.2007@gmail.com
+- Member 2 : Kunj vaghani
+- Email : vaghanikunj2448@gmail.com
+- Member 3 : Megh Patel
+- Email : megh2850@gmail.com
+- Member 4 : Nishtha Shah
+- Email : nishthashah0106@gmail.com
 # SkillSwap
 
 A modern full-stack web application built with Flask, HTML, CSS, and JavaScript. SkillSwap is a platform designed to connect learners and teachers, enabling skill sharing and collaborative learning.
